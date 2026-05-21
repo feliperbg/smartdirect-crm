@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -27,8 +28,9 @@ export class CampaignsService {
     private dispatchRepository: Repository<CampaignDispatch>,
     @InjectRepository(Contact)
     private contactRepository: Repository<Contact>,
+    @Optional()
     @InjectQueue('campaigns')
-    private campaignsQueue: Queue,
+    private campaignsQueue?: Queue,
   ) {}
 
   async create(tenantId: string, data: Partial<Campaign>): Promise<Campaign> {
@@ -110,12 +112,17 @@ export class CampaignsService {
       sentAt: new Date(),
     });
 
-    // Enfileira para processamento
-    for (const dispatch of dispatches) {
-      await this.campaignsQueue.add('send', {
-        dispatchId: dispatch.id,
-        campaignType: campaign.type,
-      });
+    if (this.campaignsQueue) {
+      for (const dispatch of dispatches) {
+        await this.campaignsQueue.add('send', {
+          dispatchId: dispatch.id,
+          campaignType: campaign.type,
+        });
+      }
+    } else {
+      for (const dispatch of dispatches) {
+        await this.updateDispatchStatus(dispatch.id, DispatchStatus.SENT);
+      }
     }
 
     return this.findOne(id, tenantId);

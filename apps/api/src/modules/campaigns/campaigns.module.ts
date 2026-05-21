@@ -7,15 +7,25 @@ import { Contact } from '../pipeline/entities/contact.entity';
 import { CampaignsService } from './campaigns.service';
 import { CampaignsController } from './campaigns.controller';
 import { CampaignsProcessor } from './campaigns.processor';
+import { isRedisEnabled } from '../../app.module';
+
+const redisEnabled = isRedisEnabled();
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Campaign, CampaignDispatch, Contact]),
-    BullModule.registerQueue({
-      name: 'campaigns',
-    }),
+    ...(redisEnabled
+      ? [
+          BullModule.registerQueue({
+            name: 'campaigns',
+          }),
+        ]
+      : []),
   ],
-  providers: [CampaignsService, CampaignsProcessor],
+  providers: [
+    CampaignsService,
+    ...(redisEnabled ? [CampaignsProcessor] : []),
+  ],
   controllers: [CampaignsController],
   exports: [CampaignsService],
 })

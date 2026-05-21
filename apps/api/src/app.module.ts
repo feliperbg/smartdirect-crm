@@ -21,6 +21,14 @@ const shouldUseSsl = (configService: ConfigService) =>
   configService.get('DB_SSL') === 'true' ||
   Boolean(configService.get('DATABASE_URL'));
 
+export const isRedisEnabled = () =>
+  process.env.DISABLE_REDIS !== 'true' &&
+  Boolean(
+    process.env.REDIS_URL ||
+      process.env.REDIS_HOST ||
+      process.env.REDIS_PASSWORD,
+  );
+
 const getDatabaseConfig = (
   configService: ConfigService,
 ): TypeOrmModuleOptions => {
@@ -93,13 +101,17 @@ const getRedisConfig = (configService: ConfigService) => {
       useFactory: getDatabaseConfig,
       inject: [ConfigService],
     }),
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        redis: getRedisConfig(configService),
-      }),
-      inject: [ConfigService],
-    }),
+    ...(isRedisEnabled()
+      ? [
+          BullModule.forRootAsync({
+            imports: [ConfigModule],
+            useFactory: (configService: ConfigService) => ({
+              redis: getRedisConfig(configService),
+            }),
+            inject: [ConfigService],
+          }),
+        ]
+      : []),
     // Configuração de Rate Limit global (100 requisições por minuto por IP)
     ThrottlerModule.forRoot([
       {
