@@ -7,7 +7,7 @@ import { Contact } from '../pipeline/entities/contact.entity';
 import { CampaignsService } from './campaigns.service';
 import { CampaignsController } from './campaigns.controller';
 import { CampaignsProcessor } from './campaigns.processor';
-import { isRedisEnabled } from '../../app.module';
+import { isRedisEnabled } from '../../common/redis';
 
 const redisEnabled = isRedisEnabled();
 

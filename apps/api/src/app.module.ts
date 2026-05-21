@@ -11,6 +11,7 @@ import { TenantsModule } from './modules/tenants/tenants.module';
 import { PipelineModule } from './modules/pipeline/pipeline.module';
 import { SacModule } from './modules/sac/sac.module';
 import { CampaignsModule } from './modules/campaigns/campaigns.module';
+import { isRedisEnabled } from './common/redis';
 
 const parseNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value);
@@ -20,14 +21,6 @@ const parseNumber = (value: string | undefined, fallback: number) => {
 const shouldUseSsl = (configService: ConfigService) =>
   configService.get('DB_SSL') === 'true' ||
   Boolean(configService.get('DATABASE_URL'));
-
-export const isRedisEnabled = () =>
-  process.env.DISABLE_REDIS !== 'true' &&
-  Boolean(
-    process.env.REDIS_URL ||
-      process.env.REDIS_HOST ||
-      process.env.REDIS_PASSWORD,
-  );
 
 const getDatabaseConfig = (
   configService: ConfigService,
