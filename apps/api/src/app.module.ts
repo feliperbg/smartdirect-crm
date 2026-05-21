@@ -5,6 +5,8 @@ import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
@@ -119,7 +121,9 @@ const getRedisConfig = (configService: ConfigService) => {
     SacModule,
     CampaignsModule,
   ],
+  controllers: [AppController],
   providers: [
+    AppService,
     // Ativando o limitador de requisições (rate-limit) globalmente
     {
       provide: APP_GUARD,
